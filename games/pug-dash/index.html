@@ -1,0 +1,2343 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PUG DASH: Пёсий Забег (Geometry Dash с Мопсом!)</title>
+    <style>
+        :root {
+            --primary-color: #F59E0B;
+            --primary-dark: #D97706;
+            --accent-color: #EF4444;
+            --accent-green: #10B981;
+            --bg-sky: #38BDF8;
+            --dark-text: #1E293B;
+            --card-bg: rgba(255, 255, 255, 0.96);
+            --border-radius: 16px;
+            --box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Comfortaa", "Fredoka", Arial, sans-serif;
+        }
+
+        body {
+            background: #0F172A;
+            min-height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: var(--dark-text);
+            padding: 10px;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            max-width: 960px;
+            max-height: 540px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: var(--border-radius);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            background: #000;
+            overflow: hidden;
+        }
+
+        canvas#gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: var(--border-radius);
+            background-color: var(--bg-sky);
+            cursor: pointer;
+        }
+
+        /* HUD */
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 12px 18px;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .hud-top-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .progress-container {
+            flex-grow: 1;
+            max-width: 440px;
+            margin: 0 16px;
+            position: relative;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 16px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid #FFF;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .progress-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #10B981, #34D399, #FBBF24);
+            border-radius: 8px;
+            transition: width 0.05s linear;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: -20px;
+            right: 0;
+            font-size: 14px;
+            font-weight: 800;
+            color: #FFF;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .hud-badge {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #1F2937;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+            border: 2px solid #F3F4F6;
+            pointer-events: auto;
+        }
+
+        .hud-btn {
+            pointer-events: auto;
+            background: #FFF;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+            transition: transform 0.1s;
+        }
+
+        .hud-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Practice Controls */
+        #practiceControls {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            display: flex;
+            gap: 10px;
+            pointer-events: auto;
+        }
+
+        .practice-btn {
+            background: #10B981;
+            color: white;
+            border: 2px solid #FFF;
+            border-radius: 12px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: transform 0.1s;
+        }
+
+        .practice-btn.delete {
+            background: #EF4444;
+        }
+
+        .practice-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Screens & Overlays */
+        .overlay-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+        }
+
+        #menuScreen {
+            background: transparent;
+            pointer-events: auto;
+        }
+
+        .menu-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 24px 32px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            max-width: 480px;
+            width: 90%;
+            border: 4px solid #FBBF24;
+            animation: bounceIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .game-title {
+            font-size: 36px;
+            font-weight: 900;
+            color: #D97706;
+            text-shadow: 2px 2px 0px #FEF3C7, 4px 4px 0px #92400E;
+            margin-bottom: 4px;
+        }
+
+        .game-subtitle {
+            font-size: 14px;
+            font-weight: 700;
+            color: #4B5563;
+            margin-bottom: 18px;
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 14px;
+            padding: 12px 20px;
+            font-size: 17px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.1s, filter 0.1s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            filter: brightness(1.06);
+        }
+
+        .btn:active {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: #FFF;
+            border: 2px solid #6EE7B7;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+            color: #FFF;
+            border: 2px solid #FDE68A;
+        }
+
+        .btn-accent {
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+            color: #FFF;
+            border: 2px solid #93C5FD;
+        }
+
+        .controls-hint {
+            font-size: 12px;
+            font-weight: 700;
+            color: #6B7280;
+            background: #F3F4F6;
+            padding: 8px 12px;
+            border-radius: 10px;
+        }
+
+        /* Modals */
+        .modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 22px 28px;
+            max-width: 580px;
+            width: 92%;
+            max-height: 85%;
+            overflow-y: auto;
+            box-shadow: var(--box-shadow);
+            border: 3px solid #F59E0B;
+            position: relative;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 900;
+            color: #B45309;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            background: #E5E7EB;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        /* Levels Grid */
+        .level-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .level-card {
+            background: #F8FAFC;
+            border: 2px solid #E2E8F0;
+            border-radius: 14px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.1s, border-color 0.1s;
+        }
+
+        .level-card:hover {
+            transform: translateY(-2px);
+            border-color: #F59E0B;
+            background: #FFFBEB;
+        }
+
+        .level-info h3 {
+            font-size: 16px;
+            font-weight: 800;
+            color: #1F2937;
+            margin-bottom: 2px;
+        }
+
+        .level-info p {
+            font-size: 12px;
+            color: #6B7280;
+            font-weight: 600;
+        }
+
+        .level-difficulty {
+            font-size: 13px;
+            font-weight: 800;
+            color: #D97706;
+        }
+
+        /* Wardrobe Grid */
+        .skin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .skin-card {
+            background: #F8FAFC;
+            border: 2px solid #E2E8F0;
+            border-radius: 14px;
+            padding: 10px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.1s, border-color 0.1s;
+        }
+
+        .skin-card:hover {
+            transform: translateY(-2px);
+            border-color: #F59E0B;
+        }
+
+        .skin-card.active {
+            border-color: #10B981;
+            background: #ECFDF5;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+        }
+
+        .skin-name {
+            font-size: 12px;
+            font-weight: 800;
+            color: #1F2937;
+            margin: 4px 0 2px 0;
+        }
+
+        .skin-desc {
+            font-size: 10px;
+            color: #6B7280;
+            line-height: 1.2;
+        }
+
+        /* Victory */
+        .victory-card {
+            text-align: center;
+        }
+
+        .victory-title {
+            font-size: 32px;
+            font-weight: 900;
+            color: #10B981;
+            margin-bottom: 6px;
+        }
+
+        .victory-stats {
+            background: #F3F4F6;
+            padding: 14px;
+            border-radius: 14px;
+            margin: 16px 0;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #6B7280;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 900;
+            color: #1F2937;
+        }
+    </style>
+</head>
+<body>
+    <a href="../../" style="position: fixed; top: 12px; left: 12px; z-index: 9999; background: rgba(0,0,0,0.65); color: white; padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; text-decoration: none; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); font-family: -apple-system, sans-serif;">← Portfolio</a>
+
+    <div id="gameContainer">
+        <!-- Canvas -->
+        <canvas id="gameCanvas" width="960" height="540"></canvas>
+
+        <!-- In-Game HUD -->
+        <div id="hud" style="display: none;">
+            <div class="hud-top-bar">
+                <div class="hud-badge" id="attemptText">Попытка 1</div>
+                
+                <div class="progress-container">
+                    <div class="progress-text" id="progressText">0%</div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="progressBarFill"></div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <div class="hud-badge" id="bonesHudText">🦴 0</div>
+                    <button class="hud-btn" id="pauseBtn" title="Пауза">⏸️</button>
+                </div>
+            </div>
+
+            <!-- Practice Controls -->
+            <div id="practiceControls" style="display: none;">
+                <button class="practice-btn" id="setCpBtn">🚩 Флаг (Z)</button>
+                <button class="practice-btn delete" id="delCpBtn">❌ Сброс (X)</button>
+            </div>
+        </div>
+
+        <!-- Main Menu -->
+        <div id="menuScreen" class="overlay-screen">
+            <div class="menu-card">
+                <div class="game-title">🐕 PUG DASH</div>
+                <div class="game-subtitle">Пёсий Забег: перепрыгивай лужи, какашки и злых псов!</div>
+
+                <div class="menu-buttons">
+                    <button class="btn btn-primary" id="btnPlay">▶ Играть (Уровень 1)</button>
+                    <button class="btn btn-secondary" id="btnLevels">🗺 Выбор Уровней</button>
+                    <button class="btn btn-accent" id="btnWardrobe">👔 Гардероб Мопса</button>
+                    <button class="btn" style="background: #8B5CF6; color: white;" id="btnEndless">⚡ Вечный Забег (Зумис!)</button>
+                </div>
+
+                <div class="controls-hint">
+                    🎮 <strong>Управление:</strong> [ПРОБЕЛ] / [СТРЕЛКА ВВЕРХ] / [КЛИК МЫШИ] — Прыжок и полёт на ракете!
+                </div>
+            </div>
+        </div>
+
+        <!-- Level Select Modal -->
+        <div id="levelSelectModal" class="modal">
+            <div class="modal-content">
+                <button class="modal-close-btn" id="closeLevelsModal">✕</button>
+                <div class="modal-title">🗺 Выберите Уровень</div>
+                
+                <div class="level-list">
+                    <div class="level-card" data-level="0">
+                        <div class="level-info">
+                            <h3>🌳 Уровень 1: Утренний Парк</h3>
+                            <p>Солнышко, первые какашки и вкусные сосиски в воздухе.</p>
+                        </div>
+                        <div class="level-difficulty">Легко ★☆☆</div>
+                    </div>
+
+                    <div class="level-card" data-level="1">
+                        <div class="level-info">
+                            <h3>🌆 Уровень 2: Городской Бульвар</h3>
+                            <p>Злые доберманы, коты на заборах и высокие гидранты!</p>
+                        </div>
+                        <div class="level-difficulty">Нормально ★★★</div>
+                    </div>
+
+                    <div class="level-card" data-level="2">
+                        <div class="level-info">
+                            <h3>🚀 Уровень 3: Ночные Зумис & Ракета!</h3>
+                            <p>Полёт на картонной ракете между котами на бешеной скорости!</p>
+                        </div>
+                        <div class="level-difficulty">Демон ★★★★★</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 16px; display: flex; justify-content: center;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer;">
+                        <input type="checkbox" id="practiceModeCheckbox" style="transform: scale(1.2);">
+                        Режим тренировки (с чекпоинтами)
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wardrobe Modal -->
+        <div id="wardrobeModal" class="modal">
+            <div class="modal-content">
+                <button class="modal-close-btn" id="closeWardrobeModal">✕</button>
+                <div class="modal-title">👔 Гардероб Мопса и Друзей</div>
+                <div style="text-align: center; margin-bottom: 12px; font-size: 13px; color: #4B5563;">
+                    Кликайте на собачку, чтобы примерить скин:
+                </div>
+                
+                <div class="skin-grid" id="skinCardsContainer"></div>
+
+                <div style="text-align: center;">
+                    <button class="btn btn-primary" id="saveWardrobeBtn" style="margin: 0 auto;">Готово к забегу!</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Victory Modal -->
+        <div id="victoryModal" class="modal">
+            <div class="modal-content victory-card">
+                <div class="victory-title">🎉 УРОВЕНЬ ПРОЙДЕН!</div>
+                <div id="vicLevelName" style="font-size: 18px; font-weight: 800; color: #4B5563;">Утренний Парк</div>
+
+                <div class="victory-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Попыток потрачено</div>
+                        <div class="stat-value" id="vicAttempts">1</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Золотых косточек</div>
+                        <div class="stat-value" id="vicBones">3 / 3</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button class="btn btn-secondary" id="vicMenuBtn">🏠 В меню</button>
+                    <button class="btn btn-primary" id="vicNextBtn">Следующий ➔</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pause Modal -->
+        <div id="pauseModal" class="modal">
+            <div class="modal-content" style="max-width: 380px; text-align: center;">
+                <div class="modal-title">⏸️ Пауза</div>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px; margin: 16px 0;">
+                    <button class="btn btn-primary" id="pauseResumeBtn">▶ Продолжить</button>
+                    <button class="btn btn-secondary" id="pauseRestartBtn">🔄 Начать заново</button>
+                    <button class="btn btn-accent" id="pauseMuteBtn">🔊 Звук: ВКЛ</button>
+                    <button class="btn" style="background: #E5E7EB; color: #1F2937;" id="pauseMenuBtn">🏠 В Главное Меню</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Embedded Scripts Bundle: Zero external dependencies! -->
+    <script>
+    // ==================== AUDIO ENGINE ====================
+    class SoundEngine {
+        constructor() {
+            this.ctx = null;
+            this.isMuted = false;
+            this.volume = 0.5;
+            this.sfxVolume = 0.7;
+            this.musicVolume = 0.45;
+            this.isPlayingMusic = false;
+            this.currentTrack = null;
+            this.beatTimer = null;
+            this.beatCallback = null;
+            this.currentBpm = 132;
+            this.step = 0;
+            this.initialized = false;
+        }
+
+        init() {
+            if (this.initialized) return;
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
+                this.masterGain = this.ctx.createGain();
+                this.masterGain.gain.value = this.isMuted ? 0 : this.volume;
+                this.masterGain.connect(this.ctx.destination);
+
+                this.sfxGain = this.ctx.createGain();
+                this.sfxGain.gain.value = this.sfxVolume;
+                this.sfxGain.connect(this.masterGain);
+
+                this.musicGain = this.ctx.createGain();
+                this.musicGain.gain.value = this.musicVolume;
+                this.musicGain.connect(this.masterGain);
+
+                this.initialized = true;
+            } catch (e) {
+                console.warn("AudioContext init error:", e);
+            }
+        }
+
+        ensureContext() {
+            if (!this.initialized) this.init();
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume();
+            }
+        }
+
+        setMuted(muted) {
+            this.isMuted = muted;
+            if (this.masterGain && this.ctx) {
+                this.masterGain.gain.setValueAtTime(muted ? 0 : this.volume, this.ctx.currentTime);
+            }
+        }
+
+        onBeat(cb) { this.beatCallback = cb; }
+
+        playJump() {
+            this.ensureContext();
+            if (!this.ctx || this.isMuted) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(220, now);
+            osc.frequency.exponentialRampToValueAtTime(560, now + 0.12);
+            gain.gain.setValueAtTime(0.35, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+            osc.connect(gain);
+            gain.connect(this.sfxGain);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        }
+
+        playSpring() {
+            this.ensureContext();
+            if (!this.ctx || this.isMuted) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.linearRampToValueAtTime(800, now + 0.1);
+            osc.frequency.linearRampToValueAtTime(550, now + 0.18);
+            osc.frequency.linearRampToValueAtTime(950, now + 0.28);
+            gain.gain.setValueAtTime(0.45, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.32);
+            osc.connect(gain);
+            gain.connect(this.sfxGain);
+            osc.start(now);
+            osc.stop(now + 0.33);
+        }
+
+        playRing() {
+            this.ensureContext();
+            if (!this.ctx || this.isMuted) return;
+            const now = this.ctx.currentTime;
+            [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + i * 0.035);
+                gain.gain.setValueAtTime(0.25, now + i * 0.035);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.035 + 0.22);
+                osc.connect(gain);
+                gain.connect(this.sfxGain);
+                osc.start(now + i * 0.035);
+                osc.stop(now + i * 0.035 + 0.25);
+            });
+            this.playBark(0.2, 0.05);
+        }
+
+        playBark(vol = 0.3, delay = 0) {
+            this.ensureContext();
+            if (!this.ctx || this.isMuted) return;
+            const now = this.ctx.currentTime + delay;
+            const osc = this.ctx.createOscillator();
+            const biquad = this.ctx.createBiquadFilter();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(380, now);
+            osc.frequency.exponentialRampToValueAtTime(220, now + 0.08);
+            biquad.type = 'bandpass';
+            biquad.frequency.setValueAtTime(900, now);
+            biquad.frequency.linearRampToValueAtTime(450, now + 0.09);
+            biquad.Q.value = 4.0;
+            gain.gain.setValueAtTime(vol, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.connect(biquad);
+            biquad.connect(gain);
+            gain.connect(this.sfxGain);
+            osc.start(now);
+            osc.stop(now + 0.11);
+        }
+
+        playCrash() {
+            this.ensureContext();
+            if (!this.ctx || this.isMuted) return;
+            const now = this.ctx.currentTime;
+            const squeak = this.ctx.createOscillator();
+            const squeakGain = this.ctx.createGain();
+            squeak.type = 'sawtooth';
+            squeak.frequency.setValueAtTime(1100, now);
+            squeak.frequency.exponentialRampToValueAtTime(240, now + 0.25);
+            squeakGain.gain.setValueAtTime(0.4, now);
+            squeakGain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+            squeak.connect(squeakGain);
+            squeakGain.connect(this.sfxGain);
+            squeak.start(now);
+            squeak.stop(now + 0.3);
+
+            const bufferSize = this.ctx.sampleRate * 0.2;
+            const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.25));
+            }
+            const whiteNoise = this.ctx.createBufferSource();
+            whiteNoise.buffer = noiseBuffer;
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 400;
+            const noiseGain = this.ctx.createGain();
+            noiseGain.gain.setValueAtTime(0.5, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+            whiteNoise.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(this.sfxGain);
+            whiteNoise.start(now);
+        }
+
+        playCheckpoint() {
+            this.ensureContext();
+            if (!this.ctx || this.isMuted) return;
+            const now = this.ctx.currentTime;
+            [659.25, 880, 1318.51].forEach((freq, i) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + i * 0.06);
+                gain.gain.setValueAtTime(0.2, now + i * 0.06);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.25);
+                osc.connect(gain);
+                gain.connect(this.sfxGain);
+                osc.start(now + i * 0.06);
+                osc.stop(now + i * 0.06 + 0.27);
+            });
+        }
+
+        playWin() {
+            this.ensureContext();
+            if (!this.ctx || this.isMuted) return;
+            const now = this.ctx.currentTime;
+            const fanfare = [
+                { note: 523.25, time: 0, dur: 0.14 },
+                { note: 659.25, time: 0.15, dur: 0.14 },
+                { note: 783.99, time: 0.30, dur: 0.14 },
+                { note: 1046.5, time: 0.45, dur: 0.45 }
+            ];
+            fanfare.forEach(item => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(item.note, now + item.time);
+                gain.gain.setValueAtTime(0.4, now + item.time);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + item.time + item.dur);
+                osc.connect(gain);
+                gain.connect(this.sfxGain);
+                osc.start(now + item.time);
+                osc.stop(now + item.time + item.dur + 0.05);
+            });
+        }
+
+        startMusic(trackType = 'park') {
+            this.ensureContext();
+            if (!this.ctx) return;
+            this.stopMusic();
+            this.isPlayingMusic = true;
+            this.currentTrack = trackType;
+
+            if (trackType === 'city') this.currentBpm = 138;
+            else if (trackType === 'night') this.currentBpm = 150;
+            else this.currentBpm = 128;
+
+            const interval = (60 / this.currentBpm) / 4;
+            this.step = 0;
+
+            this.beatTimer = setInterval(() => {
+                if (!this.isPlayingMusic) return;
+                this.playMusicStep(this.step, trackType);
+                if (this.step % 4 === 0 && this.beatCallback) {
+                    this.beatCallback(Math.floor(this.step / 4));
+                }
+                this.step = (this.step + 1) % 64;
+            }, interval * 1000);
+        }
+
+        stopMusic() {
+            if (this.beatTimer) {
+                clearInterval(this.beatTimer);
+                this.beatTimer = null;
+            }
+            this.isPlayingMusic = false;
+        }
+
+        playMusicStep(step, trackType) {
+            if (!this.ctx || this.isMuted) return;
+            const now = this.ctx.currentTime;
+            if (step % 4 === 0) this.synthKick(now);
+            if (step % 8 === 4) this.synthSnare(now);
+            if (step % 2 === 1) this.synthHiHat(now, step % 4 === 2 ? 0.12 : 0.07);
+
+            if (trackType === 'park') this.playParkMelody(step, now);
+            else if (trackType === 'city') this.playCityMelody(step, now);
+            else this.playNightMelody(step, now);
+        }
+
+        synthKick(time) {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.frequency.setValueAtTime(140, time);
+            osc.frequency.exponentialRampToValueAtTime(38, time + 0.1);
+            gain.gain.setValueAtTime(0.4, time);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.13);
+            osc.connect(gain);
+            gain.connect(this.musicGain);
+            osc.start(time);
+            osc.stop(time + 0.14);
+        }
+
+        synthSnare(time) {
+            const bufferSize = this.ctx.sampleRate * 0.09;
+            const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.4));
+            }
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = noiseBuffer;
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.value = 1000;
+            const gain = this.ctx.createGain();
+            gain.gain.setValueAtTime(0.28, time);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.09);
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.musicGain);
+            noise.start(time);
+        }
+
+        synthHiHat(time, vol = 0.08) {
+            const bufferSize = this.ctx.sampleRate * 0.035;
+            const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) output[i] = (Math.random() * 2 - 1);
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = noiseBuffer;
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.value = 7500;
+            const gain = this.ctx.createGain();
+            gain.gain.setValueAtTime(vol, time);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.035);
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.musicGain);
+            noise.start(time);
+        }
+
+        synthBass(freq, time, dur = 0.14) {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, time);
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(650, time);
+            filter.frequency.exponentialRampToValueAtTime(180, time + dur);
+            gain.gain.setValueAtTime(0.25, time);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.musicGain);
+            osc.start(time);
+            osc.stop(time + dur + 0.02);
+        }
+
+        synthLead(freq, time, dur = 0.12, type = 'square') {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, time);
+            gain.gain.setValueAtTime(0.12, time);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+            osc.connect(gain);
+            gain.connect(this.musicGain);
+            osc.start(time);
+            osc.stop(time + dur + 0.02);
+        }
+
+        playParkMelody(step, time) {
+            const bassNotes = [130.81, 130.81, 130.81, 130.81, 98.00, 98.00, 98.00, 98.00, 110.00, 110.00, 110.00, 110.00, 87.31, 87.31, 87.31, 87.31];
+            if (step % 2 === 0) {
+                const barIndex = Math.floor(step / 4) % 16;
+                this.synthBass(bassNotes[barIndex % bassNotes.length], time, 0.13);
+            }
+            const melody = {
+                0: 523.25, 2: 587.33, 4: 659.25, 6: 783.99,
+                8: 659.25, 12: 523.25, 16: 392.00, 18: 440.00,
+                20: 523.25, 24: 659.25, 28: 587.33,
+                32: 523.25, 34: 659.25, 36: 783.99, 38: 880.00,
+                40: 1046.5, 44: 783.99, 48: 880.00, 52: 783.99,
+                56: 659.25, 60: 587.33
+            };
+            if (melody[step]) this.synthLead(melody[step], time, 0.16, 'triangle');
+        }
+
+        playCityMelody(step, time) {
+            const dMinorBass = [146.83, 146.83, 174.61, 196.00, 146.83, 220.00, 196.00, 164.81];
+            if (step % 2 === 0) {
+                this.synthBass(dMinorBass[(Math.floor(step / 2)) % dMinorBass.length], time, 0.11);
+            }
+            const melody = {
+                0: 587.33, 3: 698.46, 6: 880.00, 8: 783.99,
+                12: 698.46, 14: 659.25, 16: 587.33, 20: 523.25,
+                24: 587.33, 27: 698.46, 30: 880.00, 32: 1046.5,
+                36: 880.00, 40: 783.99, 44: 880.00, 48: 698.46,
+                52: 659.25, 56: 587.33, 60: 659.25
+            };
+            if (melody[step]) this.synthLead(melody[step], time, 0.14, 'square');
+        }
+
+        playNightMelody(step, time) {
+            const arp = [220, 261.63, 329.63, 440, 523.25, 440, 329.63, 261.63];
+            this.synthLead(arp[step % arp.length], time, 0.08, 'sawtooth');
+            if (step % 4 === 0) {
+                const root = (Math.floor(step / 16) % 2 === 0) ? 110 : 87.31;
+                this.synthBass(root, time, 0.18);
+            }
+        }
+    }
+
+    window.soundEngine = new SoundEngine();
+
+    // ==================== GRAPHICS ENGINE ====================
+    if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
+        CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, radii) {
+            if (!radii) radii = 0;
+            if (typeof radii === 'number') radii = [radii, radii, radii, radii];
+            const [tl, tr, br, bl] = radii.length === 1 ? [radii[0], radii[0], radii[0], radii[0]] : radii;
+            this.beginPath();
+            this.moveTo(x + tl, y);
+            this.lineTo(x + w - tr, y);
+            this.quadraticCurveTo(x + w, y, x + w, y + tr);
+            this.lineTo(x + w, y + h - br);
+            this.quadraticCurveTo(x + w, y + h, x + w - br, y + h);
+            this.lineTo(x + bl, y + h);
+            this.quadraticCurveTo(x, y + h, x, y + h - bl);
+            this.lineTo(x, y + tl);
+            this.quadraticCurveTo(x, y, x + tl, y);
+            this.closePath();
+            return this;
+        };
+    }
+
+    class GraphicsEngine {
+        constructor() {
+            this.frame = 0;
+            this.beatPulse = 0;
+        }
+
+        triggerBeat() { this.beatPulse = 1.0; }
+
+        update() {
+            this.frame++;
+            if (this.beatPulse > 0) this.beatPulse = Math.max(0, this.beatPulse - 0.08);
+        }
+
+        drawDog(ctx, dog, skinId = 'classic', mode = 'cube', isCrashed = false) {
+            ctx.save();
+            ctx.translate(dog.x + dog.width / 2, dog.y + dog.height / 2);
+            ctx.rotate(dog.rotation);
+
+            if (mode === 'rocket') {
+                this.drawRocketDog(ctx, dog, skinId, isCrashed);
+                ctx.restore();
+                return;
+            }
+
+            const size = dog.width;
+            const half = size / 2;
+            let runBob = 0;
+            let legAngle = 0;
+            if (dog.onGround && !isCrashed) {
+                const runCycle = (this.frame * 0.35) % (Math.PI * 2);
+                runBob = Math.sin(runCycle) * 2;
+                legAngle = Math.sin(runCycle) * 0.45;
+            }
+
+            if (skinId === 'super' && !isCrashed) {
+                this.drawSuperCape(ctx, -half, -half, dog.onGround ? legAngle : 0.6);
+            }
+
+            if (!isCrashed) this.drawPaws(ctx, -half, half, legAngle, skinId);
+
+            const skinColors = this.getSkinColors(skinId);
+            ctx.save();
+            ctx.translate(0, runBob);
+
+            if (skinId === 'golden') {
+                const grad = ctx.createLinearGradient(-half, -half, half, half);
+                grad.addColorStop(0, '#FFE259');
+                grad.addColorStop(0.5, '#FFA751');
+                grad.addColorStop(1, '#FFD700');
+                ctx.fillStyle = grad;
+            } else {
+                ctx.fillStyle = skinColors.body;
+            }
+
+            ctx.beginPath();
+            ctx.roundRect(-half + 2, -half + 2, size - 4, size - 4, [12, 12, 8, 8]);
+            ctx.fill();
+            ctx.strokeStyle = skinColors.outline;
+            ctx.lineWidth = 3.5;
+            ctx.stroke();
+
+            if (skinId === 'corgi') {
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.ellipse(half * 0.2, half * 0.4, half * 0.45, half * 0.35, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            this.drawTail(ctx, -half, skinId, legAngle);
+            this.drawSnout(ctx, half, skinColors, skinId, isCrashed);
+            this.drawEyes(ctx, half, isCrashed);
+            this.drawEars(ctx, half, skinColors, skinId, legAngle);
+            this.drawAccessories(ctx, half, skinId);
+
+            ctx.restore();
+
+            if (isCrashed) this.drawDizzyStars(ctx, 0, -half - 12);
+            ctx.restore();
+        }
+
+        getSkinColors(skinId) {
+            switch (skinId) {
+                case 'corgi': return { body: '#F6993F', dark: '#DE751F', outline: '#4A2A0C', ears: '#E06B15', mask: '#FFFFFF' };
+                case 'frenchie': return { body: '#8A95A5', dark: '#5E6977', outline: '#232A35', ears: '#768192', mask: '#3B4450' };
+                case 'black': return { body: '#2C2D35', dark: '#1E1F24', outline: '#0F1012', ears: '#1F2025', mask: '#141416' };
+                case 'golden': return { body: '#FFD700', dark: '#E6AC00', outline: '#8A6800', ears: '#FFA500', mask: '#CC9000' };
+                default: return { body: '#E8C59A', dark: '#D4AA78', outline: '#4A3423', ears: '#4A3423', mask: '#3A2719' };
+            }
+        }
+
+        drawPaws(ctx, left, bottom, legAngle, skinId) {
+            ctx.fillStyle = skinId === 'corgi' ? '#FFFFFF' : (skinId === 'black' ? '#1F2025' : '#D4AA78');
+            ctx.strokeStyle = '#4A3423';
+            ctx.lineWidth = 2.5;
+
+            ctx.save();
+            ctx.translate(10, bottom - 4);
+            ctx.rotate(legAngle);
+            ctx.beginPath();
+            ctx.ellipse(0, 4, 5, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.save();
+            ctx.translate(-10, bottom - 4);
+            ctx.rotate(-legAngle);
+            ctx.beginPath();
+            ctx.ellipse(0, 4, 5, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        drawTail(ctx, left, skinId, legAngle) {
+            ctx.save();
+            ctx.translate(left + 2, 4);
+            if (skinId === 'corgi') {
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(-2, 0, 6, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.strokeStyle = '#4A3423';
+                ctx.lineWidth = 4;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                const wag = Math.sin(this.frame * 0.4) * 0.2;
+                ctx.arc(-5 + wag, -2, 7, 0.4, Math.PI * 1.6);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        drawSnout(ctx, half, colors, skinId, isCrashed) {
+            ctx.save();
+            ctx.translate(half * 0.45, half * 0.25);
+            ctx.fillStyle = colors.mask;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, half * 0.45, half * 0.35, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = colors.outline;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            if (skinId !== 'corgi') {
+                ctx.strokeStyle = colors.dark;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, -half * 0.35, 6, 0.2, Math.PI - 0.2);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#111111';
+            ctx.beginPath();
+            ctx.ellipse(3, -2, 4.5, 3.2, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (!isCrashed) {
+                ctx.fillStyle = '#FF6B8B';
+                ctx.beginPath();
+                const tongueBounce = Math.sin(this.frame * 0.3) * 1.5;
+                ctx.ellipse(5, 7 + tongueBounce, 3.5, 5, 0.2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#B33951';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        drawEyes(ctx, half, isCrashed) {
+            const eyeX = half * 0.15;
+            const eyeY = -half * 0.15;
+
+            if (isCrashed) {
+                ctx.strokeStyle = '#4A3423';
+                ctx.lineWidth = 2.5;
+                [-6, 8].forEach(x => {
+                    ctx.beginPath();
+                    ctx.moveTo(eyeX + x - 4, eyeY - 4); ctx.lineTo(eyeX + x + 4, eyeY + 4);
+                    ctx.moveTo(eyeX + x + 4, eyeY - 4); ctx.lineTo(eyeX + x - 4, eyeY + 4);
+                    ctx.stroke();
+                });
+                return;
+            }
+
+            const drawEye = (x, y) => {
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(x, y, 7, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#3A2719';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = '#1E1815';
+                ctx.beginPath();
+                ctx.arc(x + 2, y, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(x + 3.2, y - 1.8, 2, 0, Math.PI * 2);
+                ctx.fill();
+            };
+
+            drawEye(eyeX - 6, eyeY);
+            drawEye(eyeX + 8, eyeY);
+        }
+
+        drawEars(ctx, half, colors, skinId, legAngle) {
+            ctx.save();
+            if (skinId === 'corgi' || skinId === 'frenchie') {
+                ctx.fillStyle = colors.ears;
+                ctx.strokeStyle = colors.outline;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(half * 0.2, -half + 2);
+                ctx.lineTo(half * 0.5, -half - 14);
+                ctx.lineTo(half * 0.75, -half + 4);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            } else {
+                const earBounce = Math.sin(this.frame * 0.4) * 0.15;
+                ctx.fillStyle = colors.ears;
+                ctx.strokeStyle = colors.outline;
+                ctx.lineWidth = 2.5;
+                ctx.save();
+                ctx.translate(half * 0.2, -half + 4);
+                ctx.rotate(earBounce);
+                ctx.beginPath();
+                ctx.moveTo(0, 0); ctx.quadraticCurveTo(8, -2, 12, 12); ctx.quadraticCurveTo(4, 14, 0, 8);
+                ctx.closePath();
+                ctx.fill(); ctx.stroke();
+                ctx.restore();
+            }
+            ctx.restore();
+        }
+
+        drawAccessories(ctx, half, skinId) {
+            switch (skinId) {
+                case 'cool':
+                    ctx.fillStyle = '#E53E3E';
+                    ctx.beginPath();
+                    ctx.arc(-2, -half + 2, half * 0.75, Math.PI, 0);
+                    ctx.fill();
+                    ctx.fillStyle = '#1A202C';
+                    ctx.fillRect(half * 0.1, -half * 0.3, 10, 8);
+                    ctx.fillRect(-half * 0.35, -half * 0.3, 10, 8);
+                    ctx.fillRect(-half * 0.1, -half * 0.25, 6, 3);
+                    ctx.strokeStyle = '#F6E05E';
+                    ctx.lineWidth = 3.5;
+                    ctx.beginPath();
+                    ctx.arc(0, half * 0.6, 8, 0, Math.PI);
+                    ctx.stroke();
+                    break;
+                case 'detective':
+                    ctx.fillStyle = '#8B6538';
+                    ctx.beginPath();
+                    ctx.arc(0, -half + 2, half * 0.7, Math.PI, 0);
+                    ctx.fill();
+                    ctx.fillStyle = '#6B4E2B';
+                    ctx.fillRect(-half * 0.8, -half + 1, half * 1.6, 4);
+                    break;
+                case 'astro':
+                    ctx.strokeStyle = '#CBD5E0';
+                    ctx.lineWidth = 3;
+                    ctx.fillStyle = 'rgba(235, 248, 255, 0.35)';
+                    ctx.beginPath();
+                    ctx.arc(4, -2, half * 0.95, 0, Math.PI * 2);
+                    ctx.fill(); ctx.stroke();
+                    break;
+                case 'super':
+                    ctx.fillStyle = '#18181B';
+                    ctx.beginPath();
+                    ctx.ellipse(half * 0.15, -half * 0.15, half * 0.55, half * 0.22, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+                case 'golden':
+                    ctx.fillStyle = '#FFE600';
+                    ctx.strokeStyle = '#D97706';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(-12, -half + 4); ctx.lineTo(-14, -half - 8); ctx.lineTo(-6, -half - 2);
+                    ctx.lineTo(0, -half - 12); ctx.lineTo(6, -half - 2); ctx.lineTo(14, -half - 8); ctx.lineTo(12, -half + 4);
+                    ctx.closePath();
+                    ctx.fill(); ctx.stroke();
+                    break;
+                default:
+                    ctx.fillStyle = '#EF4444';
+                    ctx.fillRect(-half * 0.6, half * 0.45, half * 1.2, 5);
+                    ctx.fillStyle = '#F59E0B';
+                    ctx.beginPath();
+                    ctx.arc(0, half * 0.65, 3.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+            }
+        }
+
+        drawSuperCape(ctx, left, top, angle) {
+            ctx.save();
+            ctx.fillStyle = '#DC2626';
+            ctx.strokeStyle = '#991B1B';
+            ctx.lineWidth = 2;
+            const wave = Math.sin(this.frame * 0.35) * 4;
+            ctx.beginPath();
+            ctx.moveTo(left + 6, top + 14);
+            ctx.quadraticCurveTo(left - 20, top + 8 + wave, left - 24, top + 24 + wave);
+            ctx.quadraticCurveTo(left - 12, top + 30, left + 10, top + 26);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+            ctx.restore();
+        }
+
+        drawRocketDog(ctx, dog, skinId, isCrashed) {
+            const half = dog.width / 2;
+            ctx.fillStyle = '#B45309';
+            ctx.strokeStyle = '#78350F';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.roundRect(-half - 6, -half + 4, dog.width + 12, dog.height - 4, 8);
+            ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = '#DC2626';
+            ctx.beginPath();
+            ctx.moveTo(half + 6, -half + 4); ctx.lineTo(half + 18, 0); ctx.lineTo(half + 6, half);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+
+            ctx.save();
+            ctx.translate(0, -6);
+            const skinColors = this.getSkinColors(skinId);
+            ctx.fillStyle = skinColors.body;
+            ctx.beginPath();
+            ctx.arc(0, -half + 6, 14, Math.PI, 0);
+            ctx.fill();
+            this.drawEyes(ctx, half * 0.7, isCrashed);
+            ctx.restore();
+        }
+
+        drawDizzyStars(ctx, x, y) {
+            for (let i = 0; i < 3; i++) {
+                const angle = (this.frame * 0.12) + (i * (Math.PI * 2 / 3));
+                ctx.fillStyle = '#FBBF24';
+                ctx.beginPath();
+                ctx.arc(x + Math.cos(angle) * 18, y + Math.sin(angle) * 6, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        drawObstacle(ctx, obs) {
+            ctx.save();
+            ctx.translate(obs.x, obs.y);
+            switch (obs.type) {
+                case 'poop': this.drawPoop(ctx, obs.width, obs.height); break;
+                case 'double_poop': this.drawDoublePoop(ctx, obs.width, obs.height); break;
+                case 'triple_poop': this.drawTriplePoop(ctx, obs.width, obs.height); break;
+                case 'hydrant': this.drawHydrant(ctx, obs.width, obs.height); break;
+                case 'angry_dog': this.drawAngryDog(ctx, obs.width, obs.height); break;
+                case 'cat': this.drawCat(ctx, obs.width, obs.height); break;
+                case 'jump_pad': this.drawJumpPad(ctx, obs.width, obs.height, obs.bounceAnim || 0); break;
+                case 'jump_ring': this.drawJumpRing(ctx, obs.width, obs.height, obs.used); break;
+                case 'portal_rocket': this.drawPortal(ctx, obs.width, obs.height, '#F59E0B', '🚀'); break;
+                case 'portal_normal': this.drawPortal(ctx, obs.width, obs.height, '#10B981', '🐶'); break;
+                case 'block': this.drawPlatformBlock(ctx, obs.width, obs.height, obs.variant || 'brick'); break;
+                case 'bone': this.drawCollectibleBone(ctx, obs.width, obs.height, obs.collected); break;
+                case 'mud': this.drawMudPuddle(ctx, obs.width, obs.height); break;
+            }
+            ctx.restore();
+        }
+
+        drawPoop(ctx, w, h) {
+            const cx = w / 2;
+            const cy = h;
+            const flyAngle = this.frame * 0.15;
+            ctx.fillStyle = '#1F2937';
+            ctx.beginPath();
+            ctx.arc(cx + Math.cos(flyAngle) * 12, cy - h * 0.8 + Math.sin(flyAngle) * 6, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#6B4226';
+            ctx.strokeStyle = '#3D2413';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.ellipse(cx, cy - 8, w * 0.44, 9, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.ellipse(cx, cy - 20, w * 0.35, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(cx - 8, cy - 26); ctx.quadraticCurveTo(cx - 2, cy - h + 2, cx + 4, cy - h);
+            ctx.quadraticCurveTo(cx + 10, cy - h + 6, cx + 7, cy - 24);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+        }
+
+        drawDoublePoop(ctx, w, h) {
+            ctx.save();
+            this.drawPoop(ctx, w * 0.5, h);
+            ctx.translate(w * 0.5, 0);
+            this.drawPoop(ctx, w * 0.5, h);
+            ctx.restore();
+        }
+
+        drawTriplePoop(ctx, w, h) {
+            ctx.save();
+            const pw = w / 3;
+            this.drawPoop(ctx, pw, h);
+            ctx.translate(pw, 0);
+            this.drawPoop(ctx, pw, h);
+            ctx.translate(pw, 0);
+            this.drawPoop(ctx, pw, h);
+            ctx.restore();
+        }
+
+        drawHydrant(ctx, w, h) {
+            const cx = w / 2;
+            ctx.fillStyle = '#DC2626';
+            ctx.strokeStyle = '#7F1D1D';
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.roundRect(cx - w * 0.45, h - 8, w * 0.9, 8, 3); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.roundRect(cx - w * 0.32, 12, w * 0.64, h - 20, 4); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#F59E0B';
+            ctx.fillRect(cx - w * 0.48, h * 0.45, 8, 12);
+            ctx.fillRect(cx + w * 0.48 - 8, h * 0.45, 8, 12);
+            ctx.fillStyle = '#DC2626';
+            ctx.beginPath(); ctx.arc(cx, 12, w * 0.32, Math.PI, 0); ctx.fill(); ctx.stroke();
+        }
+
+        drawAngryDog(ctx, w, h) {
+            const cx = w / 2;
+            const cy = h / 2;
+            ctx.fillStyle = '#374151';
+            ctx.strokeStyle = '#111827';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.roundRect(4, 10, w - 8, h - 14, 8); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#EF4444';
+            ctx.fillRect(8, 14, w - 16, 6);
+            ctx.fillStyle = '#EF4444';
+            ctx.beginPath();
+            ctx.ellipse(cx - 7, cy - 2, 4, 3, 0.3, 0, Math.PI * 2);
+            ctx.ellipse(cx + 7, cy - 2, 4, 3, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        drawCat(ctx, w, h) {
+            const cx = w / 2;
+            const cy = h / 2;
+            ctx.fillStyle = '#1F2937';
+            ctx.strokeStyle = '#111827';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.ellipse(cx, cy + 4, w * 0.4, h * 0.35, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(cx - 12, cy - 8); ctx.lineTo(cx - 15, cy - 20); ctx.lineTo(cx - 5, cy - 12);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(cx + 12, cy - 8); ctx.lineTo(cx + 15, cy - 20); ctx.lineTo(cx + 5, cy - 12);
+            ctx.fill();
+        }
+
+        drawMudPuddle(ctx, w, h) {
+            ctx.fillStyle = '#78350F';
+            ctx.strokeStyle = '#451A03';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.ellipse(w / 2, h - 5, w * 0.48, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        }
+
+        drawJumpPad(ctx, w, h, bounceAnim) {
+            const cx = w / 2;
+            const cy = h;
+            const squish = bounceAnim * 6;
+            ctx.fillStyle = '#F59E0B';
+            ctx.strokeStyle = '#B45309';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.roundRect(4, cy - 18 + squish, w - 8, 10, 5); ctx.fill(); ctx.stroke();
+        }
+
+        drawJumpRing(ctx, w, h, used) {
+            const cx = w / 2;
+            const cy = h / 2;
+            if (!used) {
+                ctx.strokeStyle = '#FBBF24';
+                ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(cx, cy, w * 0.42, 0, Math.PI * 2); ctx.stroke();
+            }
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.fillStyle = '#EF4444';
+            ctx.strokeStyle = '#991B1B';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.roundRect(-14, -6, 28, 12, 6); ctx.fill(); ctx.stroke();
+            ctx.restore();
+        }
+
+        drawPortal(ctx, w, h, color, icon) {
+            const cx = w / 2;
+            const cy = h / 2;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.ellipse(cx, cy, w * 0.42, h * 0.48, 0, 0, Math.PI * 2); ctx.stroke();
+            ctx.font = '22px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(icon, cx, cy);
+        }
+
+        drawPlatformBlock(ctx, w, h, variant) {
+            ctx.fillStyle = variant === 'hedge' ? '#22C55E' : '#F97316';
+            ctx.fillRect(0, 0, w, h);
+            ctx.strokeStyle = variant === 'hedge' ? '#15803D' : '#9A3412';
+            ctx.lineWidth = 2.5;
+            ctx.strokeRect(0, 0, w, h);
+        }
+
+        drawCollectibleBone(ctx, w, h, collected) {
+            if (collected) return;
+            const cx = w / 2;
+            const cy = h / 2 + Math.sin(this.frame * 0.1) * 3;
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.fillStyle = '#FBBF24';
+            ctx.strokeStyle = '#B45309';
+            ctx.lineWidth = 2;
+            ctx.fillRect(-10, -3, 20, 6);
+            [[-10, -4], [-10, 4], [10, -4], [10, 4]].forEach(([x, y]) => {
+                ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            });
+            ctx.restore();
+        }
+
+        drawBackground(ctx, theme, cameraX, width, height) {
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
+            if (theme === 'night') {
+                skyGrad.addColorStop(0, '#0F172A'); skyGrad.addColorStop(1, '#312E81');
+            } else if (theme === 'city') {
+                skyGrad.addColorStop(0, '#7C2D12'); skyGrad.addColorStop(1, '#FEF08A');
+            } else {
+                skyGrad.addColorStop(0, '#38BDF8'); skyGrad.addColorStop(1, '#E0F2FE');
+            }
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, width, height);
+
+            // Sun / Moon
+            ctx.fillStyle = theme === 'night' ? '#FEF08A' : '#FBBF24';
+            ctx.beginPath();
+            ctx.arc(width - 90, 70, 30, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Trees
+            const treeSpacing = 160;
+            const startX = -((cameraX * 0.3) % treeSpacing) - 100;
+            for (let x = startX; x < width + 160; x += treeSpacing) {
+                ctx.fillStyle = '#78350F';
+                ctx.fillRect(x + 16, height - 150, 14, 70);
+                ctx.fillStyle = (theme === 'night') ? '#064E3B' : '#22C55E';
+                ctx.beginPath();
+                ctx.arc(x + 23, height - 155, 32, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Fence
+            const fenceY = height - 105;
+            ctx.fillStyle = theme === 'night' ? '#4B5563' : '#F8FAFC';
+            ctx.fillRect(0, fenceY + 12, width, 5);
+        }
+
+        drawGround(ctx, groundY, cameraX, width, height) {
+            ctx.fillStyle = '#4ADE80';
+            ctx.fillRect(0, groundY, width, 8);
+            ctx.fillStyle = '#CBD5E1';
+            ctx.fillRect(0, groundY + 8, width, height - (groundY + 8));
+
+            ctx.strokeStyle = '#94A3B8';
+            ctx.lineWidth = 2.5;
+            const tileSize = 64;
+            const startX = -((cameraX) % tileSize);
+            for (let x = startX; x < width + tileSize; x += tileSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, groundY + 8);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+        }
+    }
+
+    window.graphicsEngine = new GraphicsEngine();
+
+    // ==================== LEVELS ====================
+    const LEVELS = [
+        {
+            id: 'park',
+            name: 'Уровень 1: Утренний Парк',
+            theme: 'park',
+            musicTrack: 'park',
+            baseSpeed: 5.5,
+            targetLength: 2200,
+            secretBonesTotal: 3,
+            objects: [
+                { type: 'poop', x: 450, y: 0, width: 36, height: 34 },
+                { type: 'bone', x: 600, y: 50, width: 32, height: 24, id: 0 },
+                { type: 'poop', x: 750, y: 0, width: 36, height: 34 },
+                { type: 'double_poop', x: 1050, y: 0, width: 68, height: 34 },
+                { type: 'block', x: 1300, y: 38, width: 60, height: 38, variant: 'hedge' },
+                { type: 'jump_ring', x: 1600, y: 80, width: 44, height: 44 },
+                { type: 'poop', x: 1600, y: 0, width: 36, height: 34 },
+                { type: 'jump_pad', x: 1850, y: 0, width: 42, height: 20 },
+                { type: 'hydrant', x: 1950, y: 0, width: 38, height: 60 },
+                { type: 'bone', x: 1950, y: 120, width: 32, height: 24, id: 1 },
+                { type: 'block', x: 2150, y: 45, width: 50, height: 45, variant: 'brick' },
+                { type: 'jump_ring', x: 2400, y: 130, width: 44, height: 44 },
+                { type: 'angry_dog', x: 2650, y: 0, width: 48, height: 48 },
+                { type: 'bone', x: 2850, y: 60, width: 32, height: 24, id: 2 },
+                { type: 'triple_poop', x: 3000, y: 0, width: 96, height: 34 }
+            ],
+            endX: 3250
+        },
+        {
+            id: 'city',
+            name: 'Уровень 2: Городской Бульвар',
+            theme: 'city',
+            musicTrack: 'city',
+            baseSpeed: 6.2,
+            targetLength: 3500,
+            secretBonesTotal: 3,
+            objects: [
+                { type: 'double_poop', x: 450, y: 0, width: 68, height: 34 },
+                { type: 'hydrant', x: 700, y: 0, width: 38, height: 60 },
+                { type: 'jump_pad', x: 1000, y: 0, width: 42, height: 20 },
+                { type: 'angry_dog', x: 1150, y: 0, width: 48, height: 48 },
+                { type: 'bone', x: 1150, y: 120, width: 32, height: 24, id: 0 },
+                { type: 'block', x: 1400, y: 48, width: 60, height: 48, variant: 'brick' },
+                { type: 'cat', x: 1530, y: 80, width: 40, height: 38 },
+                { type: 'jump_ring', x: 1680, y: 120, width: 44, height: 44 },
+                { type: 'triple_poop', x: 1900, y: 0, width: 96, height: 34 },
+                { type: 'jump_pad', x: 2200, y: 0, width: 42, height: 20 },
+                { type: 'jump_ring', x: 2320, y: 100, width: 44, height: 44 },
+                { type: 'bone', x: 2460, y: 175, width: 32, height: 24, id: 1 },
+                { type: 'angry_dog', x: 2750, y: 0, width: 48, height: 48 },
+                { type: 'hydrant', x: 2900, y: 0, width: 38, height: 60 }
+            ],
+            endX: 3300
+        },
+        {
+            id: 'night',
+            name: 'Уровень 3: Ночные Зумис & Ракета!',
+            theme: 'night',
+            musicTrack: 'night',
+            baseSpeed: 7.2,
+            targetLength: 4600,
+            secretBonesTotal: 3,
+            objects: [
+                { type: 'poop', x: 420, y: 0, width: 36, height: 34 },
+                { type: 'jump_pad', x: 650, y: 0, width: 42, height: 20 },
+                { type: 'triple_poop', x: 770, y: 0, width: 96, height: 34 },
+                { type: 'portal_rocket', x: 1100, y: 70, width: 50, height: 80 },
+                { type: 'hydrant', x: 1350, y: 0, width: 38, height: 80 },
+                { type: 'cat', x: 1450, y: 190, width: 44, height: 42 },
+                { type: 'cat', x: 1750, y: 220, width: 44, height: 42 },
+                { type: 'bone', x: 1850, y: 110, width: 32, height: 24, id: 1 },
+                { type: 'hydrant', x: 2000, y: 0, width: 38, height: 80 },
+                { type: 'portal_normal', x: 2400, y: 60, width: 50, height: 80 },
+                { type: 'jump_pad', x: 2600, y: 0, width: 42, height: 20 },
+                { type: 'jump_ring', x: 2750, y: 120, width: 44, height: 44 },
+                { type: 'triple_poop', x: 3000, y: 0, width: 96, height: 34 }
+            ],
+            endX: 3400
+        }
+    ];
+
+    class EndlessGenerator {
+        constructor() { this.nextX = 450; this.boneCount = 0; }
+        reset() { this.nextX = 450; this.boneCount = 0; }
+        generateChunk(targetX) {
+            const objects = [];
+            const patterns = ['single_poop', 'double_poop', 'triple_poop', 'hydrant', 'angry_dog', 'pad_and_hazard'];
+            while (this.nextX < targetX) {
+                const p = patterns[Math.floor(Math.random() * patterns.length)];
+                const dist = 240 + Math.random() * 140;
+                switch (p) {
+                    case 'single_poop': objects.push({ type: 'poop', x: this.nextX, y: 0, width: 36, height: 34 }); break;
+                    case 'double_poop': objects.push({ type: 'double_poop', x: this.nextX, y: 0, width: 68, height: 34 }); break;
+                    case 'triple_poop': objects.push({ type: 'triple_poop', x: this.nextX, y: 0, width: 96, height: 34 }); break;
+                    case 'hydrant': objects.push({ type: 'hydrant', x: this.nextX, y: 0, width: 38, height: 60 }); break;
+                    case 'angry_dog': objects.push({ type: 'angry_dog', x: this.nextX, y: 0, width: 48, height: 48 }); break;
+                    case 'pad_and_hazard':
+                        objects.push({ type: 'jump_pad', x: this.nextX, y: 0, width: 42, height: 20 });
+                        objects.push({ type: 'hydrant', x: this.nextX + 110, y: 0, width: 38, height: 60 });
+                        this.nextX += 130;
+                        break;
+                }
+                this.nextX += dist;
+            }
+            return objects;
+        }
+    }
+
+    // ==================== GAME CORE ====================
+    class Game {
+        constructor() {
+            this.canvas = document.getElementById('gameCanvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.width = 960;
+            this.height = 540;
+            this.groundY = 430;
+
+            this.state = 'MENU';
+            this.currentLevelIndex = 0;
+            this.isEndless = false;
+            this.practiceMode = false;
+            this.checkpoints = [];
+
+            this.dog = {
+                x: 120,
+                y: this.groundY - 48,
+                width: 46,
+                height: 46,
+                vx: 5.5,
+                vy: 0,
+                rotation: 0,
+                onGround: true,
+                mode: 'cube',
+                dead: false
+            };
+
+            this.gravity = 0.92;
+            this.jumpForce = -14.2;
+            this.springForce = -17.8;
+            this.ringJumpForce = -13.6;
+
+            this.selectedSkin = localStorage.getItem('pug_skin') || 'classic';
+            this.attempts = 1;
+            this.totalBones = parseInt(localStorage.getItem('pug_bones') || '0', 10);
+            this.levelStats = JSON.parse(localStorage.getItem('pug_level_stats') || '{}');
+
+            this.isJumpPressed = false;
+            this.jumpBuffer = false;
+            this.jumpBufferTimer = 0;
+
+            this.cameraX = 0;
+            this.levelObjects = [];
+            this.endlessGen = new EndlessGenerator();
+            this.particles = [];
+            this.confetti = [];
+            this.progress = 0;
+            this.bonesCollectedInRun = new Set();
+
+            this.lastTime = performance.now();
+            this.accumulator = 0;
+            this.timestep = 1000 / 60;
+
+            this.initDOM();
+            this.initInput();
+            this.resize();
+            window.addEventListener('resize', () => this.resize());
+
+            window.soundEngine.onBeat(() => window.graphicsEngine.triggerBeat());
+            requestAnimationFrame((t) => this.loop(t));
+        }
+
+        initDOM() {
+            this.hud = document.getElementById('hud');
+            this.progressBar = document.getElementById('progressBarFill');
+            this.progressText = document.getElementById('progressText');
+            this.attemptText = document.getElementById('attemptText');
+            this.bonesHudText = document.getElementById('bonesHudText');
+
+            this.menuScreen = document.getElementById('menuScreen');
+            this.levelSelectModal = document.getElementById('levelSelectModal');
+            this.wardrobeModal = document.getElementById('wardrobeModal');
+            this.victoryModal = document.getElementById('victoryModal');
+            this.pauseModal = document.getElementById('pauseModal');
+            this.practiceControls = document.getElementById('practiceControls');
+
+            this.updateBonesDisplay();
+            this.renderWardrobeGrid();
+        }
+
+        resize() {
+            const container = document.getElementById('gameContainer');
+            const aspect = this.width / this.height;
+            let w = container.clientWidth || window.innerWidth;
+            let h = container.clientHeight || (w / aspect);
+            if (h === 0) h = w / aspect;
+
+            if (w / h > aspect) w = h * aspect;
+            else h = w / aspect;
+
+            this.canvas.width = this.width;
+            this.canvas.height = this.height;
+            this.canvas.style.width = `${w}px`;
+            this.canvas.style.height = `${h}px`;
+        }
+
+        initInput() {
+            const onDown = (e) => {
+                if (e.target.closest('button') || e.target.closest('.modal-content')) return;
+                if (e.code === 'KeyP') { this.togglePause(); return; }
+                if (e.code === 'KeyZ' && this.practiceMode) { this.setCheckpoint(); return; }
+                if (e.code === 'KeyX' && this.practiceMode) { this.removeCheckpoint(); return; }
+                if (e.type === 'keydown' && !['Space', 'ArrowUp', 'KeyW'].includes(e.code)) return;
+                e.preventDefault();
+                this.handleJumpPress();
+            };
+
+            const onUp = (e) => {
+                if (e.target.closest('button')) return;
+                if (e.type === 'keyup' && !['Space', 'ArrowUp', 'KeyW'].includes(e.code)) return;
+                this.handleJumpRelease();
+            };
+
+            window.addEventListener('keydown', onDown);
+            window.addEventListener('keyup', onUp);
+            this.canvas.addEventListener('mousedown', onDown);
+            window.addEventListener('mouseup', onUp);
+            this.canvas.addEventListener('touchstart', onDown, { passive: false });
+            window.addEventListener('touchend', onUp, { passive: false });
+        }
+
+        handleJumpPress() {
+            window.soundEngine.ensureContext();
+            this.isJumpPressed = true;
+            this.jumpBuffer = true;
+            this.jumpBufferTimer = 8;
+
+            if (this.state === 'MENU') {
+                this.startLevel(this.currentLevelIndex);
+                return;
+            }
+            if (this.state === 'CRASHED') {
+                this.restartLevel();
+                return;
+            }
+            if (this.state === 'PLAYING' || this.state === 'PRACTICE') {
+                if (this.tryActivateJumpRing()) return;
+                if (this.dog.mode === 'cube' && this.dog.onGround) this.executeJump();
+            }
+        }
+
+        handleJumpRelease() {
+            this.isJumpPressed = false;
+            this.jumpBuffer = false;
+        }
+
+        executeJump() {
+            this.dog.vy = this.jumpForce;
+            this.dog.onGround = false;
+            window.soundEngine.playJump();
+            this.jumpBuffer = false;
+        }
+
+        tryActivateJumpRing() {
+            const dogCenterX = this.dog.x + this.dog.width / 2;
+            const dogCenterY = this.dog.y + this.dog.height / 2;
+            for (const obj of this.levelObjects) {
+                if (obj.type === 'jump_ring' && !obj.used) {
+                    const ringCenterX = obj.x + obj.width / 2;
+                    const ringCenterY = (this.groundY - obj.y) - obj.height / 2;
+                    const dist = Math.hypot(dogCenterX - ringCenterX, dogCenterY - ringCenterY);
+                    if (dist < 48) {
+                        obj.used = true;
+                        this.dog.vy = this.ringJumpForce;
+                        this.dog.onGround = false;
+                        window.soundEngine.playRing();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        startLevel(index, endless = false) {
+            this.isEndless = endless;
+            this.currentLevelIndex = index;
+            this.state = this.practiceMode ? 'PRACTICE' : 'PLAYING';
+            this.checkpoints = [];
+
+            const lvlKey = endless ? 'endless' : LEVELS[index].id;
+            const savedStats = this.levelStats[lvlKey] || { attempts: 0 };
+            this.attempts = savedStats.attempts + 1;
+            this.levelStats[lvlKey] = { ...savedStats, attempts: this.attempts };
+            localStorage.setItem('pug_level_stats', JSON.stringify(this.levelStats));
+
+            this.resetPlayer();
+            this.loadLevelData();
+
+            const track = endless ? 'city' : LEVELS[index].musicTrack;
+            window.soundEngine.startMusic(track);
+
+            this.hud.style.display = 'block';
+            this.menuScreen.style.display = 'none';
+            this.victoryModal.style.display = 'none';
+            this.pauseModal.style.display = 'none';
+            this.practiceControls.style.display = this.practiceMode ? 'flex' : 'none';
+            this.attemptText.textContent = `Попытка ${this.attempts}`;
+        }
+
+        resetPlayer() {
+            const speed = this.isEndless ? 5.8 : LEVELS[this.currentLevelIndex].baseSpeed;
+            this.dog.x = 120;
+            this.dog.y = this.groundY - 46;
+            this.dog.vx = speed;
+            this.dog.vy = 0;
+            this.dog.rotation = 0;
+            this.dog.onGround = true;
+            this.dog.mode = 'cube';
+            this.dog.dead = false;
+
+            this.cameraX = 0;
+            this.progress = 0;
+            this.bonesCollectedInRun.clear();
+            this.particles = [];
+        }
+
+        loadLevelData() {
+            if (this.isEndless) {
+                this.endlessGen.reset();
+                this.levelObjects = this.endlessGen.generateChunk(1800);
+            } else {
+                this.levelObjects = JSON.parse(JSON.stringify(LEVELS[this.currentLevelIndex].objects));
+            }
+        }
+
+        restartLevel() {
+            if (this.practiceMode && this.checkpoints.length > 0) {
+                this.restoreCheckpoint();
+                return;
+            }
+            this.attempts++;
+            this.attemptText.textContent = `Попытка ${this.attempts}`;
+            this.resetPlayer();
+            this.loadLevelData();
+            const track = this.isEndless ? 'city' : LEVELS[this.currentLevelIndex].musicTrack;
+            window.soundEngine.startMusic(track);
+            this.state = this.practiceMode ? 'PRACTICE' : 'PLAYING';
+        }
+
+        crash() {
+            if (this.dog.dead) return;
+            this.dog.dead = true;
+            this.state = 'CRASHED';
+            window.soundEngine.stopMusic();
+            window.soundEngine.playCrash();
+
+            for (let i = 0; i < 20; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const spd = 3 + Math.random() * 5;
+                this.particles.push({
+                    x: this.dog.x + 23, y: this.dog.y + 23,
+                    vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd,
+                    size: 4 + Math.random() * 4,
+                    color: ['#F59E0B', '#EF4444', '#E8C59A', '#1F2937'][Math.floor(Math.random() * 4)],
+                    alpha: 1.0, life: 30
+                });
+            }
+
+            setTimeout(() => {
+                if (this.state === 'CRASHED') this.restartLevel();
+            }, 750);
+        }
+
+        win() {
+            this.state = 'VICTORY';
+            window.soundEngine.stopMusic();
+            window.soundEngine.playWin();
+
+            const lvl = LEVELS[this.currentLevelIndex];
+            this.totalBones += this.bonesCollectedInRun.size;
+            localStorage.setItem('pug_bones', this.totalBones.toString());
+            this.updateBonesDisplay();
+
+            document.getElementById('vicLevelName').textContent = lvl.name;
+            document.getElementById('vicAttempts').textContent = this.attempts.toString();
+            document.getElementById('vicBones').textContent = `${this.bonesCollectedInRun.size} / ${lvl.secretBonesTotal}`;
+            this.victoryModal.style.display = 'flex';
+        }
+
+        setCheckpoint() {
+            if (!this.practiceMode || this.state !== 'PRACTICE') return;
+            this.checkpoints.push({
+                x: this.dog.x, y: this.dog.y, vy: this.dog.vy,
+                rotation: this.dog.rotation, mode: this.dog.mode, cameraX: this.cameraX
+            });
+            window.soundEngine.playCheckpoint();
+        }
+
+        removeCheckpoint() {
+            if (!this.practiceMode || this.checkpoints.length === 0) return;
+            this.checkpoints.pop();
+        }
+
+        restoreCheckpoint() {
+            const cp = this.checkpoints[this.checkpoints.length - 1];
+            this.dog.x = cp.x;
+            this.dog.y = cp.y;
+            this.dog.vy = 0;
+            this.dog.rotation = 0;
+            this.dog.mode = cp.mode;
+            this.dog.dead = false;
+            this.cameraX = cp.cameraX;
+            for (const obj of this.levelObjects) {
+                if (obj.x > this.dog.x) obj.used = false;
+            }
+            this.state = 'PRACTICE';
+        }
+
+        updatePhysics() {
+            if (this.state !== 'PLAYING' && this.state !== 'PRACTICE') return;
+
+            this.dog.x += this.dog.vx;
+            this.cameraX = this.dog.x - 140;
+
+            if (this.isEndless) {
+                const meters = Math.floor(this.dog.x / 20);
+                this.progressText.textContent = `${meters}м`;
+                if (this.dog.x + 960 > this.endlessGen.nextX - 600) {
+                    const newObjs = this.endlessGen.generateChunk(this.dog.x + 1400);
+                    this.levelObjects.push(...newObjs);
+                }
+            } else {
+                const lvl = LEVELS[this.currentLevelIndex];
+                this.progress = Math.min(100, Math.floor((this.dog.x / lvl.endX) * 100));
+                this.progressBar.style.width = `${this.progress}%`;
+                this.progressText.textContent = `${this.progress}%`;
+                if (this.dog.x >= lvl.endX) { this.win(); return; }
+            }
+
+            if (this.dog.mode === 'cube' && (this.jumpBuffer || this.isJumpPressed)) {
+                this.tryActivateJumpRing();
+            }
+
+            if (this.dog.mode === 'rocket') {
+                if (this.isJumpPressed) this.dog.vy -= 0.65;
+                else this.dog.vy += 0.55;
+                this.dog.vy = Math.max(-7.5, Math.min(7.5, this.dog.vy));
+                this.dog.y += this.dog.vy;
+                this.dog.rotation = this.dog.vy * 0.05;
+                if (this.dog.y < 20 || this.dog.y + this.dog.height > this.groundY) {
+                    this.crash();
+                    return;
+                }
+            } else {
+                this.dog.vy += this.gravity;
+                this.dog.y += this.dog.vy;
+                if (this.dog.y + this.dog.height >= this.groundY) {
+                    this.dog.y = this.groundY - this.dog.height;
+                    this.dog.vy = 0;
+                    this.dog.onGround = true;
+                    this.dog.rotation = 0;
+                    if (this.jumpBuffer || this.isJumpPressed) this.executeJump();
+                } else {
+                    this.dog.onGround = false;
+                    this.dog.rotation += 0.14;
+                }
+            }
+
+            this.checkObstacleCollisions();
+        }
+
+        checkObstacleCollisions() {
+            const dogBox = {
+                left: this.dog.x + 6,
+                right: this.dog.x + this.dog.width - 6,
+                top: this.dog.y + 6,
+                bottom: this.dog.y + this.dog.height - 4
+            };
+
+            for (const obj of this.levelObjects) {
+                if (obj.x + obj.width < this.dog.x - 100 || obj.x > this.dog.x + 100) continue;
+                const objY = this.groundY - obj.y - obj.height;
+                const objBox = { left: obj.x, right: obj.x + obj.width, top: objY, bottom: objY + obj.height };
+
+                if (obj.type === 'block') {
+                    if (this.checkAABB(dogBox, objBox)) {
+                        const prevDogBottom = (this.dog.y - this.dog.vy) + this.dog.height;
+                        if (prevDogBottom <= objBox.top + 10 && this.dog.vy >= 0) {
+                            this.dog.y = objBox.top - this.dog.height;
+                            this.dog.vy = 0;
+                            this.dog.onGround = true;
+                            this.dog.rotation = 0;
+                            if (this.jumpBuffer || this.isJumpPressed) this.executeJump();
+                        } else {
+                            this.crash();
+                            return;
+                        }
+                    }
+                    continue;
+                }
+
+                if (obj.type === 'jump_pad') {
+                    if (this.checkAABB(dogBox, objBox)) {
+                        this.dog.vy = this.springForce;
+                        this.dog.onGround = false;
+                        obj.bounceAnim = 1.0;
+                        window.soundEngine.playSpring();
+                    }
+                    if (obj.bounceAnim > 0) obj.bounceAnim = Math.max(0, obj.bounceAnim - 0.15);
+                    continue;
+                }
+
+                if (obj.type === 'portal_rocket' && this.checkAABB(dogBox, objBox)) {
+                    this.dog.mode = 'rocket';
+                    continue;
+                }
+                if (obj.type === 'portal_normal' && this.checkAABB(dogBox, objBox)) {
+                    this.dog.mode = 'cube';
+                    continue;
+                }
+
+                if (obj.type === 'bone' && !obj.collected && this.checkAABB(dogBox, objBox)) {
+                    obj.collected = true;
+                    this.bonesCollectedInRun.add(obj.id);
+                    window.soundEngine.playRing();
+                    continue;
+                }
+
+                if (obj.type === 'jump_ring') continue;
+
+                if (['poop', 'double_poop', 'triple_poop', 'hydrant', 'angry_dog', 'cat', 'mud'].includes(obj.type)) {
+                    const hazardBox = { left: objBox.left + 5, right: objBox.right - 5, top: objBox.top + 6, bottom: objBox.bottom };
+                    if (this.checkAABB(dogBox, hazardBox)) {
+                        this.crash();
+                        return;
+                    }
+                }
+            }
+        }
+
+        checkAABB(r1, r2) {
+            return !(r2.left > r1.right || r2.right < r1.left || r2.top > r1.bottom || r2.bottom < r1.top);
+        }
+
+        updateParticles() {
+            for (let i = this.particles.length - 1; i >= 0; i--) {
+                const p = this.particles[i];
+                p.x += p.vx; p.y += p.vy; p.life--;
+                p.alpha = Math.max(0, p.life / 25);
+                if (p.life <= 0) this.particles.splice(i, 1);
+            }
+        }
+
+        render() {
+            const theme = this.isEndless ? 'city' : (LEVELS[this.currentLevelIndex] ? LEVELS[this.currentLevelIndex].theme : 'park');
+            window.graphicsEngine.drawBackground(this.ctx, theme, this.cameraX, this.width, this.height);
+            window.graphicsEngine.drawGround(this.ctx, this.groundY, this.cameraX, this.width, this.height);
+
+            this.ctx.save();
+            this.ctx.translate(-this.cameraX, 0);
+
+            for (const obj of this.levelObjects) {
+                const drawObj = { ...obj, y: this.groundY - obj.y - obj.height };
+                window.graphicsEngine.drawObstacle(this.ctx, drawObj);
+            }
+
+            for (const p of this.particles) {
+                this.ctx.save();
+                this.ctx.globalAlpha = p.alpha;
+                this.ctx.fillStyle = p.color;
+                this.ctx.beginPath();
+                this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.restore();
+            }
+
+            window.graphicsEngine.drawDog(this.ctx, this.dog, this.selectedSkin, this.dog.mode, this.dog.dead);
+            this.ctx.restore();
+        }
+
+        loop(time) {
+            const delta = time - this.lastTime;
+            this.lastTime = time;
+            this.accumulator += Math.min(delta, 100);
+
+            while (this.accumulator >= this.timestep) {
+                this.updatePhysics();
+                this.updateParticles();
+                window.graphicsEngine.update();
+                this.accumulator -= this.timestep;
+            }
+
+            this.render();
+            requestAnimationFrame((t) => this.loop(t));
+        }
+
+        updateBonesDisplay() {
+            if (this.bonesHudText) this.bonesHudText.textContent = `🦴 ${this.totalBones}`;
+        }
+
+        renderWardrobeGrid() {
+            const skins = [
+                { id: 'classic', name: 'Жорик (Классика)', desc: 'Озорной бежевый мопс с ошейником.' },
+                { id: 'cool', name: 'Крутой Мопс', desc: 'Чёрные очки, кепка и золотая цепь.' },
+                { id: 'detective', name: 'Шерлок Мопс', desc: 'Клетчатая шляпа сыщика.' },
+                { id: 'corgi', name: 'Корги Пушок', desc: 'Рыжий корги с пушистой попой.' },
+                { id: 'frenchie', name: 'Француз Буля', desc: 'Ушастый серый бульдог.' },
+                { id: 'astro', name: 'Космо-Мопс', desc: 'Скафандр с аквариумом.' },
+                { id: 'super', name: 'Супер-Мопс', desc: 'Красный летающий плащ и маска!' },
+                { id: 'black', name: 'Уголёк', desc: 'Угольно-чёрный мопс.' },
+                { id: 'golden', name: 'Золотой Чемпион', desc: 'Сияющий золотой мопс в короне!' }
+            ];
+
+            const container = document.getElementById('skinCardsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            skins.forEach(skin => {
+                const card = document.createElement('div');
+                card.className = `skin-card ${this.selectedSkin === skin.id ? 'active' : ''}`;
+                const previewCanvas = document.createElement('canvas');
+                previewCanvas.width = 64; previewCanvas.height = 64;
+                const pctx = previewCanvas.getContext('2d');
+                window.graphicsEngine.drawDog(pctx, { x: 8, y: 8, width: 48, height: 48, rotation: 0, onGround: true }, skin.id, 'cube', false);
+
+                card.innerHTML = `<div class="skin-name">${skin.name}</div><div class="skin-desc">${skin.desc}</div>`;
+                card.prepend(previewCanvas);
+                card.onclick = () => {
+                    this.selectedSkin = skin.id;
+                    localStorage.setItem('pug_skin', skin.id);
+                    this.renderWardrobeGrid();
+                    window.soundEngine.playBark(0.3);
+                };
+                container.appendChild(card);
+            });
+        }
+
+        togglePause() {
+            if (this.state === 'PLAYING' || this.state === 'PRACTICE') {
+                this.state = 'PAUSED';
+                window.soundEngine.stopMusic();
+                this.pauseModal.style.display = 'flex';
+            } else if (this.state === 'PAUSED') {
+                this.resumeGame();
+            }
+        }
+
+        resumeGame() {
+            this.pauseModal.style.display = 'none';
+            this.state = this.practiceMode ? 'PRACTICE' : 'PLAYING';
+            const track = this.isEndless ? 'city' : LEVELS[this.currentLevelIndex].musicTrack;
+            window.soundEngine.startMusic(track);
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        window.game = new Game();
+
+        document.getElementById('btnPlay').onclick = () => {
+            window.game.practiceMode = false;
+            window.game.startLevel(0, false);
+        };
+        document.getElementById('btnEndless').onclick = () => {
+            window.game.practiceMode = false;
+            window.game.startLevel(0, true);
+        };
+        document.getElementById('btnLevels').onclick = () => {
+            document.getElementById('levelSelectModal').style.display = 'flex';
+            window.soundEngine.playBark(0.2);
+        };
+        document.getElementById('btnWardrobe').onclick = () => {
+            window.game.renderWardrobeGrid();
+            document.getElementById('wardrobeModal').style.display = 'flex';
+            window.soundEngine.playBark(0.2);
+        };
+        document.getElementById('closeLevelsModal').onclick = () => {
+            document.getElementById('levelSelectModal').style.display = 'none';
+        };
+        document.getElementById('closeWardrobeModal').onclick = () => {
+            document.getElementById('wardrobeModal').style.display = 'none';
+        };
+        document.getElementById('saveWardrobeBtn').onclick = () => {
+            document.getElementById('wardrobeModal').style.display = 'none';
+        };
+        document.querySelectorAll('.level-card').forEach(card => {
+            card.onclick = () => {
+                const lvlIdx = parseInt(card.dataset.level, 10);
+                window.game.practiceMode = document.getElementById('practiceModeCheckbox').checked;
+                document.getElementById('levelSelectModal').style.display = 'none';
+                window.game.startLevel(lvlIdx, false);
+            };
+        });
+        document.getElementById('pauseBtn').onclick = (e) => { e.stopPropagation(); window.game.togglePause(); };
+        document.getElementById('pauseResumeBtn').onclick = () => window.game.resumeGame();
+        document.getElementById('pauseRestartBtn').onclick = () => {
+            document.getElementById('pauseModal').style.display = 'none';
+            window.game.restartLevel();
+        };
+        document.getElementById('pauseMenuBtn').onclick = () => {
+            document.getElementById('pauseModal').style.display = 'none';
+            window.game.hud.style.display = 'none';
+            window.game.menuScreen.style.display = 'flex';
+            window.game.state = 'MENU';
+            window.soundEngine.stopMusic();
+        };
+        document.getElementById('pauseMuteBtn').onclick = () => {
+            window.soundEngine.setMuted(!window.soundEngine.isMuted);
+            document.getElementById('pauseMuteBtn').textContent = window.soundEngine.isMuted ? '🔇 Звук: ВЫКЛ' : '🔊 Звук: ВКЛ';
+        };
+        document.getElementById('setCpBtn').onclick = (e) => { e.stopPropagation(); window.game.setCheckpoint(); };
+        document.getElementById('delCpBtn').onclick = (e) => { e.stopPropagation(); window.game.removeCheckpoint(); };
+        document.getElementById('vicMenuBtn').onclick = () => {
+            document.getElementById('victoryModal').style.display = 'none';
+            window.game.hud.style.display = 'none';
+            window.game.menuScreen.style.display = 'flex';
+            window.game.state = 'MENU';
+        };
+        document.getElementById('vicNextBtn').onclick = () => {
+            document.getElementById('victoryModal').style.display = 'none';
+            const nextIdx = (window.game.currentLevelIndex + 1) % LEVELS.length;
+            window.game.startLevel(nextIdx, false);
+        };
+    });
+    </script>
+</body>
+</html>

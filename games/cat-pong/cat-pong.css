@@ -1,0 +1,404 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #0f111d;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #fff;
+  touch-action: none;
+}
+
+#app-layout {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* --- Боковая панель (Sidebar) --- */
+#sidebar {
+  width: 320px;
+  background: #17192a;
+  border-right: 2px solid rgba(255, 183, 3, 0.2);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 20px;
+  gap: 20px;
+  box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4);
+  z-index: 20;
+  overflow-y: auto;
+}
+
+.brand {
+  text-align: center;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.brand-icon {
+  font-size: 40px;
+  display: inline-block;
+  animation: catWiggle 2s infinite ease-in-out;
+}
+
+@keyframes catWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+
+.brand h1 {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ffb703;
+  text-shadow: 0 0 15px rgba(255, 183, 3, 0.5);
+  margin-top: 4px;
+}
+
+.brand-tag {
+  font-size: 12px;
+  color: #9aa5be;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Stats Card */
+.stats-card {
+  background: #1e2238;
+  border-radius: 16px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stat-item {
+  background: #151829;
+  border-radius: 12px;
+  padding: 12px 10px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stat-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c97b5;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.stat-number {
+  font-size: 26px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.current-score .stat-number {
+  color: #00f5d4;
+  text-shadow: 0 0 12px rgba(0, 245, 212, 0.6);
+}
+
+.high-score .stat-number {
+  color: #ffd166;
+  text-shadow: 0 0 12px rgba(255, 209, 102, 0.6);
+}
+
+.wow-stat .stat-number {
+  color: #ff007f;
+  text-shadow: 0 0 12px rgba(255, 0, 128, 0.6);
+}
+
+.combo-stat .stat-number {
+  color: #70d6ff;
+}
+
+/* Rules Card */
+.rules-card {
+  background: rgba(25, 29, 48, 0.6);
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #b2bed8;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.rules-card h3 {
+  font-size: 14px;
+  color: #ffb703;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.rules-card ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rules-card strong {
+  color: #fff;
+}
+
+/* Buttons */
+.controls-card {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  background: #252a42;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sidebar-btn:hover {
+  background: #333a5c;
+  border-color: #ffb703;
+}
+
+.restart-action {
+  background: linear-gradient(135deg, #ff007f, #b30059);
+  border: none;
+  box-shadow: 0 0 15px rgba(255, 0, 128, 0.4);
+}
+
+.restart-action:hover {
+  box-shadow: 0 0 25px rgba(255, 0, 128, 0.8);
+  transform: translateY(-1px);
+}
+
+/* --- Игровая зона --- */
+#game-zone {
+  flex: 1;
+  height: 100%;
+  position: relative;
+  background: #0f111d;
+  overflow: hidden;
+}
+
+#pongCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Мобильный компактный HUD */
+#mobile-hud {
+  display: none;
+  position: absolute;
+  top: env(safe-area-inset-top, 10px);
+  left: 12px;
+  right: 12px;
+  height: 48px;
+  background: rgba(23, 25, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 0 14px;
+  align-items: center;
+  justify-content: space-between;
+  backdrop-filter: blur(8px);
+  z-index: 15;
+  pointer-events: none;
+}
+
+.m-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.m-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: #8c97b5;
+  letter-spacing: 1px;
+}
+
+.m-val {
+  font-size: 18px;
+  font-weight: 900;
+  color: #00f5d4;
+}
+
+.m-stat.highlight .m-val {
+  color: #ffd166;
+}
+
+.m-btn {
+  pointer-events: auto;
+  background: #1e2238;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* --- Модальные оверлеи (Старт и Game Over) --- */
+.game-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 12, 22, 0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  padding: 20px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.modal-box {
+  background: #1b1e33;
+  border: 2px solid #ffb703;
+  box-shadow: 0 0 35px rgba(255, 183, 3, 0.35);
+  border-radius: 24px;
+  padding: 32px 28px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.cat-mascot {
+  font-size: 64px;
+  margin-bottom: 12px;
+}
+
+.modal-box h2 {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ffb703;
+  margin-bottom: 8px;
+}
+
+.danger-title {
+  color: #ff0055 !important;
+  text-shadow: 0 0 15px rgba(255, 0, 85, 0.6);
+}
+
+.modal-desc, .gameover-reason {
+  color: #a4b3d1;
+  font-size: 15px;
+  margin-bottom: 24px;
+}
+
+.main-action-btn {
+  width: 100%;
+  padding: 16px;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #00f5d4, #00bbf9);
+  color: #0b132b;
+  cursor: pointer;
+  box-shadow: 0 0 25px rgba(0, 245, 212, 0.5);
+  transition: all 0.15s ease;
+}
+
+.main-action-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 35px rgba(0, 245, 212, 0.8);
+}
+
+.pulse-glow {
+  background: linear-gradient(135deg, #ff007f, #ffb703);
+  color: #fff;
+  box-shadow: 0 0 25px rgba(255, 0, 128, 0.6);
+}
+
+.hint-text {
+  font-size: 12px;
+  color: #7b87a5;
+  margin-top: 14px;
+}
+
+.gameover-stats {
+  background: #131525;
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.g-stat {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  color: #a4b3d1;
+}
+
+.g-stat strong {
+  color: #fff;
+  font-size: 18px;
+}
+
+.record-highlight strong {
+  color: #ffd166;
+  font-size: 20px;
+}
+
+/* --- Адаптивность для мобильных телефонов (iPhone 15 Pro Max и др.) --- */
+@media (max-width: 768px) {
+  #app-layout {
+    flex-direction: column;
+  }
+
+  #sidebar {
+    display: none; /* Скрываем боковую панель на мобильных, используем мобильный HUD */
+  }
+
+  #mobile-hud {
+    display: flex;
+  }
+
+  #game-zone {
+    width: 100vw;
+    height: 100vh;
+  }
+}

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Face Shooter Arcade</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Face Shooter">
+  <meta name="theme-color" content="#0d0f18">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <a href="../../" style="position: fixed; top: 12px; left: 12px; z-index: 9999; background: rgba(0,0,0,0.65); color: white; padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; text-decoration: none; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); font-family: -apple-system, sans-serif;">← Portfolio</a>
+  <div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Top HUD -->
+    <div id="hud" class="hidden">
+      <div class="hud-top">
+        <div class="hud-box">
+          <span class="hud-label">SCORE</span>
+          <span id="score-val" class="hud-val">0</span>
+        </div>
+        <div class="hud-box wave-box">
+          <span class="hud-label">WAVE</span>
+          <span id="wave-val" class="hud-val">1</span>
+        </div>
+        <div class="hud-box">
+          <span class="hud-label">HIGH</span>
+          <span id="high-score-val" class="hud-val">0</span>
+        </div>
+      </div>
+
+      <!-- Health & XP Bar -->
+      <div class="status-bars">
+        <div class="bar-container hp-container">
+          <div id="hp-bar" class="bar-fill hp-fill" style="width: 100%;"></div>
+          <span class="bar-text" id="hp-text">100 / 100</span>
+        </div>
+      </div>
+
+      <!-- Quick Mute Button -->
+      <button id="audio-toggle" class="icon-btn" title="Toggle Sound">🔊</button>
+    </div>
+
+    <!-- Mobile Virtual Controls -->
+    <div id="touch-controls" class="hidden">
+      <div id="joystick-zone">
+        <div id="joystick-base">
+          <div id="joystick-stick"></div>
+        </div>
+      </div>
+      <div id="shoot-zone">
+        <button id="shoot-btn">🔥<br><span>FIRE</span></button>
+      </div>
+    </div>
+
+    <!-- Start / Customization Screen -->
+    <div id="start-screen" class="overlay-screen">
+      <div class="card neon-border">
+        <h1 class="game-title">FACE <span class="neon-highlight">SHOOTER</span></h1>
+        <p class="subtitle">Mini-Arcade Arena Survival</p>
+
+        <!-- Custom Face Selectors -->
+        <div class="face-customizer">
+          <!-- Hero Face -->
+          <div class="custom-card">
+            <h3>HERO FACE</h3>
+            <div class="avatar-preview" id="hero-preview-box">
+              <img id="hero-avatar-img" src="" alt="Hero Face" class="avatar-circle hidden">
+              <div id="hero-avatar-default" class="avatar-circle default-face hero-bg">😎</div>
+            </div>
+            <label class="custom-file-btn">
+              📷 Upload Photo
+              <input type="file" id="hero-photo-input" accept="image/*">
+            </label>
+            <div class="presets-row">
+              <button class="preset-btn" data-type="hero" data-emoji="😎">😎</button>
+              <button class="preset-btn" data-type="hero" data-emoji="🤠">🤠</button>
+              <button class="preset-btn" data-type="hero" data-emoji="🐱">🐱</button>
+              <button class="preset-btn" data-type="hero" data-emoji="🤖">🤖</button>
+            </div>
+          </div>
+
+          <!-- Enemy Face -->
+          <div class="custom-card">
+            <h3>ENEMY FACE</h3>
+            <div class="avatar-preview" id="enemy-preview-box">
+              <img id="enemy-avatar-img" src="" alt="Enemy Face" class="avatar-circle hidden">
+              <div id="enemy-avatar-default" class="avatar-circle default-face enemy-bg">😈</div>
+            </div>
+            <label class="custom-file-btn">
+              👾 Upload Photo
+              <input type="file" id="enemy-photo-input" accept="image/*">
+            </label>
+            <div class="presets-row">
+              <button class="preset-btn" data-type="enemy" data-emoji="😈">😈</button>
+              <button class="preset-btn" data-type="enemy" data-emoji="🤡">🤡</button>
+              <button class="preset-btn" data-type="enemy" data-emoji="👽">👽</button>
+              <button class="preset-btn" data-type="enemy" data-emoji="🧟">🧟</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls-hint">
+          <p><strong>Mobile:</strong> Left thumb moves • Right button fires (auto-aim)</p>
+          <p><strong>Desktop:</strong> WASD/Arrows to move • Mouse to aim & shoot / Space</p>
+        </div>
+
+        <button id="start-btn" class="glow-btn start-glow">START GAME</button>
+      </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameover-screen" class="overlay-screen hidden">
+      <div class="card neon-border">
+        <h2 class="gameover-title">GAME OVER</h2>
+        <div class="score-summary">
+          <p>Survived Waves: <span id="final-wave" class="gold">0</span></p>
+          <p>Final Score: <span id="final-score" class="gold">0</span></p>
+          <p>Best Score: <span id="best-score" class="gold">0</span></p>
+        </div>
+        <button id="restart-btn" class="glow-btn restart-glow">PLAY AGAIN</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

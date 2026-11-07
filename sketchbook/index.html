@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Margo Gladky — Art & Design Sketchbook</title>
+    <link rel="stylesheet" href="sketchbook.css">
+    <script src="page-flip.browser.js"></script>
+</head>
+<body>
+
+    <!-- Studio Desk Decor & Ambient Light -->
+    <div class="studio-light"></div>
+    <div class="desk-decor decor-pen"></div>
+    <div class="desk-decor decor-eraser"></div>
+
+    <!-- Top Header -->
+    <header class="app-header">
+        <a href="../" style="color: #cbd5e1; text-decoration: none; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 4px;">❮ Home</a>
+        <div class="header-divider"></div>
+        <div class="artist-badge">
+            <div class="artist-avatar">M</div>
+            <span class="artist-name">Margarita Gladky</span>
+        </div>
+        <div class="header-divider"></div>
+        <div class="project-title">Art &amp; Design Sketchbook • GCSE Fine Art</div>
+    </header>
+
+    <!-- Navigation Arrows on Screen Edges -->
+    <button class="nav-arrow prev" id="arrowPrev" title="Previous Page">❮</button>
+    <button class="nav-arrow next" id="arrowNext" title="Next Page">❯</button>
+
+    <!-- Main Book Stage -->
+    <main class="stage">
+        <div class="book-wrapper">
+            <div id="flipbook">
+
+                <!-- Page 0: FRONT COVER -->
+                <div class="page cover-front" data-density="hard">
+                    <div class="page-content cover-container">
+                        <div class="cover-tag">PORTFOLIO EDITION • 2026</div>
+                        <div class="cover-main">
+                            <div class="cover-art-motif">✒️</div>
+                            <h1 class="cover-title">SKETCHBOOK</h1>
+                            <div class="cover-subtitle">Margarita Gladky</div>
+                            <p class="cover-desc">Fine Art Studies: Henry Moore Sculptural Forms, Monoprinting &amp; Biro Cross-Hatching Techniques.</p>
+                        </div>
+                        <div class="cover-footer">
+                            <span>GCSE ART &amp; DESIGN</span>
+                            <span class="open-hint">Click corner or drag to open ❯</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page 1: SPREAD 1 (LEFT) - HENRY MOORE CONTEXT -->
+                <div class="page art-page" data-page-id="1">
+                    <div class="page-content">
+                        <img src="assets/web/page_01_henry_context.jpg" alt="Henry Moore Artist Research" loading="eager">
+                        <div class="paper-shading-left"></div>
+                    </div>
+                </div>
+
+                <!-- Page 2: SPREAD 1 (RIGHT) - HENRY MOORE DRAWING -->
+                <div class="page art-page" data-page-id="2">
+                    <div class="page-content">
+                        <img src="assets/web/page_02_henry_drawing.jpg" alt="Henry Moore Sculptural Drawing" loading="eager">
+                        <div class="paper-shading-right"></div>
+                    </div>
+                </div>
+
+                <!-- Page 3: SPREAD 2 (LEFT) - MONOPRINT TITLE & COLLAGE -->
+                <div class="page art-page" data-page-id="3">
+                    <div class="page-content">
+                        <img src="assets/web/page_03_monoprint_title.jpg" alt="Monoprint Title Spread &amp; Skull Study" loading="lazy">
+                        <div class="paper-shading-left"></div>
+                    </div>
+                </div>
+
+                <!-- Page 4: SPREAD 2 (RIGHT) - MONOPRINT TECHNIQUE -->
+                <div class="page art-page" data-page-id="4">
+                    <div class="page-content">
+                        <img src="assets/web/page_04_monoprint_technique.jpg" alt="Monoprint Technique &amp; Biro Refinement" loading="lazy">
+                        <div class="paper-shading-right"></div>
+                    </div>
+                </div>
+
+                <!-- Page 5: INSIDE BACK COVER (ARTIST STATEMENT) -->
+                <div class="page cover-back" data-density="hard">
+                    <div class="page-content back-container">
+                        <div class="cover-tag">STUDIO ARCHIVE</div>
+                        <div class="back-quote">
+                            "Drawing is a way of reasoning on paper... exploring tone, contour, and depth through line."
+                        </div>
+                        <div class="back-meta">
+                            <p><b>Techniques Exhibited:</b></p>
+                            <p>Monoprint transfer, Biro pen cross-hatching, mixed media collage, vintage newspaper overlay.</p>
+                            <br>
+                            <p><b>Created by Margarita Gladky</b></p>
+                            <p>London, United Kingdom • 2026</p>
+                            <br>
+                            <p><a href="../games/pug-dash/" style="color: var(--accent-gold); text-decoration: none;">🎮 Also play Margo's Pug Dash Game ❯</a></p>
+                            <p style="margin-top: 8px;"><a href="../" style="color: #94a3b8; text-decoration: none; font-size: 11px;">← Back to Portfolio Home</a></p>
+                        </div>
+                        <div class="cover-footer">
+                            <span>margo.gladky.dev</span>
+                            <span>PAGE 5 OF 5</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Control Bar -->
+    <footer class="bottom-controls">
+        <button class="ctrl-btn" id="btnPrev" title="Previous Page (Left Arrow)">❮</button>
+        <div class="page-counter" id="pageCounter">Cover</div>
+        <button class="ctrl-btn" id="btnNext" title="Next Page (Right Arrow / Space)">❯</button>
+        <div class="header-divider"></div>
+        <button class="ctrl-btn" id="btnLoupe" title="Toggle Magnifier Loupe (Z)">🔍</button>
+        <button class="ctrl-btn" id="btnSpread" title="View Full Continuous Spread">🖼️</button>
+        <button class="ctrl-btn" id="btnNotes" title="Artist &amp; Project Notes">📝</button>
+        <button class="ctrl-btn" id="btnSound" title="Toggle Paper Rustle Sound (M)">🔊</button>
+        <button class="ctrl-btn" id="btnFullscreen" title="Fullscreen (F)">⛶</button>
+    </footer>
+
+    <!-- Interactive Magnifier Loupe Element -->
+    <div class="magnifier-loupe" id="magnifierLoupe"></div>
+
+    <!-- Artist Notes Drawer Backdrop & Slide-out -->
+    <div class="drawer-backdrop" id="drawerBackdrop"></div>
+    <aside class="notes-drawer" id="notesDrawer">
+        <div class="drawer-header">
+            <h2 class="drawer-title">Artist &amp; Technique Notes</h2>
+            <button class="drawer-close" id="drawerClose">&times;</button>
+        </div>
+
+        <div class="note-section">
+            <span class="note-tag">PROJECT 01</span>
+            <h3 class="note-h3">Henry Moore Sculptural Studies</h3>
+            <div class="quote-box">
+                "Henry Moore (1898–1986) was an important British artist in the twentieth century. His work made him one of the well known sculptors around the world. Henry Moore is best known for his abstract big sculptures, especially his large bronze pieces... He used lines to show the shapes and textures of these things."
+            </div>
+            <p class="note-p">
+                <b>Media &amp; Techniques:</b> Ballpoint biro pen, ink, paper tearing collage, and grid-based organic form contouring.
+            </p>
+        </div>
+
+        <div class="note-section">
+            <span class="note-tag">PROJECT 02</span>
+            <h3 class="note-h3">Monoprinting &amp; Biro Cross-Hatching</h3>
+            <div class="quote-box">
+                "The process I used is monoprinting. I have refined my print using biro. The technique I used is cross-hatching. I have worked into the shadows to give a stronger depth and tonal value."
+            </div>
+            <p class="note-p">
+                <b>Subject:</b> Elephant Skull / Anatomical Form study.
+            </p>
+            <p class="note-p">
+                <b>Composition:</b> Mixed-media montage featuring authentic library stamps (<i>Maurice Nicoll Free Library "WITHDRAWN"</i>), newspaper cuttings, and heavy black monoprint ink textures.
+            </p>
+        </div>
+
+        <div class="note-section">
+            <span class="note-tag">TIPS</span>
+            <p class="note-p">
+                • <b>Turn Pages:</b> Click and drag the corner of any page, or use your keyboard arrows.<br>
+                • <b>Inspect Details:</b> Toggle <b>🔍</b> to use the high-resolution magnifying loupe, or double-click any page for fullscreen zoom.<br>
+                • <b>Sound:</b> realistic 3D paper rustle synthesized with Web Audio.
+            </p>
+        </div>
+    </aside>
+
+    <!-- Lightbox Full HD Zoom Modal -->
+    <div class="lightbox-modal" id="lightboxModal">
+        <button class="lightbox-close" id="lightboxClose">&times;</button>
+        <img src="" alt="Full HD Artwork" class="lightbox-img" id="lightboxImg">
+    </div>
+
+    <script src="sketchbook.js"></script>
+</body>
+</html>

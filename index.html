@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Margo Gladky — Art, Design &amp; Creative Code</title>
+    <meta name="description" content="Personal portfolio of Margarita Gladky. Interactive 3D art sketchbooks, GCSE fine art studies, and creative HTML5 games.">
+    <style>
+        :root {
+            --bg: #090c10;
+            --surface: #131720;
+            --surface-hover: #1a202c;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.2);
+            --accent-gold: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --radius-lg: 20px;
+            --radius-md: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Ambient glowing background blobs */
+        .ambient-blob-1 {
+            position: fixed;
+            top: -150px;
+            left: 20%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .ambient-blob-2 {
+            position: fixed;
+            bottom: -150px;
+            right: 15%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+            width: 100%;
+        }
+
+        /* Navbar */
+        nav {
+            padding: 24px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+        .avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f59e0b, #ec4899, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 800;
+            color: white;
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.25);
+        }
+        .logo-text h1 {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+        .logo-text p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .badge {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 50px 0 40px;
+            text-align: center;
+        }
+        .hero-tag {
+            display: inline-block;
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--accent-gold);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 6px 16px;
+            border-radius: 999px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+        .hero h2 {
+            font-size: clamp(32px, 5vw, 54px);
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1.15;
+            margin-bottom: 18px;
+            background: linear-gradient(180deg, #ffffff 40%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p {
+            font-size: 17px;
+            color: var(--text-muted);
+            max-width: 620px;
+            margin: 0 auto;
+        }
+
+        /* Featured Sketchbook Banner */
+        .featured-card {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(19, 23, 32, 0.95) 60%);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            margin: 30px 0 60px;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 36px;
+            align-items: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        .featured-card:hover {
+            border-color: rgba(245, 158, 11, 0.45);
+            transform: translateY(-2px);
+        }
+        .featured-info h3 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #ffffff;
+        }
+        .featured-info p {
+            color: #cbd5e1;
+            font-size: 15px;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        .features-pill-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+        .feat-pill {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 12px;
+            padding: 5px 12px;
+            border-radius: 6px;
+            color: #e2e8f0;
+        }
+        .btn-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #0f172a;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
+        }
+        .btn-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(245, 158, 11, 0.45);
+        }
+        .featured-preview-box {
+            position: relative;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            aspect-ratio: 4 / 3;
+            background: #1e2430;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+        .featured-preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        .featured-card:hover .featured-preview-box img {
+            transform: scale(1.04);
+        }
+        .preview-overlay-badge {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-gold);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Section Headings */
+        .section-header {
+            margin-bottom: 28px;
+        }
+        .section-header h3 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-header p {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Games Grid */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin-bottom: 70px;
+        }
+        .game-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .game-card:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 32px rgba(0,0,0,0.4);
+        }
+        .game-icon-banner {
+            height: 140px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 54px;
+            position: relative;
+            overflow: hidden;
+        }
+        .banner-pug {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+        }
+        .banner-cat {
+            background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+        }
+        .banner-face {
+            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+        }
+
+        .game-card h4 {
+            font-size: 19px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+        .game-card p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-gold);
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Footer */
+        footer {
+            margin-top: auto;
+            border-top: 1px solid var(--border);
+            padding: 32px 0;
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        footer a {
+            color: var(--text-main);
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 820px) {
+            .featured-card {
+                grid-template-columns: 1fr;
+                padding: 24px;
+            }
+            .hero { padding: 30px 0 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-blob-1"></div>
+    <div class="ambient-blob-2"></div>
+
+    <div class="container">
+        <!-- Top Nav -->
+        <nav>
+            <a href="/" class="logo">
+                <div class="avatar">M</div>
+                <div class="logo-text">
+                    <h1>Margarita Gladky</h1>
+                    <p>Creative Studio • GCSE Fine Art &amp; Code</p>
+                </div>
+            </a>
+            <div class="badge">
+                <span class="status-dot"></span>
+                <span>Active Projects</span>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <span class="hero-tag">Portfolio &amp; Lab</span>
+            <h2>Where Fine Art Meets Interactive Code</h2>
+            <p>Welcome to my personal workspace. Here I showcase my authentic GCSE Art &amp; Design sketchbook studies and playful interactive web games.</p>
+        </section>
+
+        <!-- Featured Project: 3D Art Sketchbook -->
+        <section>
+            <div class="featured-card">
+                <div class="featured-info">
+                    <span class="hero-tag" style="background: rgba(245, 158, 11, 0.18);">★ Featured Project</span>
+                    <h3>Interactive 3D Art Sketchbook</h3>
+                    <p>An authentic digital replica of my art sketchbook. Experience realistic 3D paper-turning physics, ambient studio acoustics, high-resolution magnifying loupe inspection, and project reflections on Henry Moore and Monoprinting.</p>
+                    <div class="features-pill-row">
+                        <span class="feat-pill">📖 3D Page Flip Physics</span>
+                        <span class="feat-pill">🔍 2.5K Magnifier Loupe</span>
+                        <span class="feat-pill">🔊 Paper ASMR Sounds</span>
+                        <span class="feat-pill">✒️ Biro &amp; Monoprint</span>
+                    </div>
+                    <a href="sketchbook/" class="btn-cta">
+                        <span>Open 3D Sketchbook</span>
+                        <span>❯</span>
+                    </a>
+                </div>
+                <div class="featured-preview-box">
+                    <img src="sketchbook/assets/web/sculptures_spread.jpg" alt="Sketchbook Spread Preview">
+                    <div class="preview-overlay-badge">Realistic Turnable 3D Book</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Games Section -->
+        <section>
+            <div class="section-header">
+                <h3><span>🎮</span> Interactive Web Games</h3>
+                <p>Experimental arcade games created with JavaScript &amp; HTML5 Canvas.</p>
+            </div>
+
+            <div class="games-grid">
+                <!-- Pug Dash -->
+                <a href="games/pug-dash/" class="game-card">
+                    <div class="game-icon-banner banner-pug">🐶</div>
+                    <h4>Pug Dash: Пёсий Забег</h4>
+                    <p>Cartoon Geometry Dash starring an acrobatic pug! Dodge hydrants and angry dogs, grab flying sausages in mid-air, and unlock funny costumes in the pug wardrobe.</p>
+                    <div class="card-footer">
+                        <span>Play Game</span>
+                        <span>❯</span>
+                    </div>
+                </a>
+
+                <!-- Cat-Pong -->
+                <a href="games/cat-pong/" class="game-card">
+                    <div class="game-icon-banner banner-cat">🐱</div>
+                    <h4>КОТО-ПОНГ: Лоток и Какахи</h4>
+                    <p>A hilarious retro physics game. Use the litter box paddle to deflect bouncing cats and falling obstacles with authentic 8-bit sound effects.</p>
+                    <div class="card-footer">
+                        <span>Play Game</span>
+                        <span>❯</span>
+                    </div>
+                </a>
+
+                <!-- Face Shooter Arcade -->
+                <a href="games/face-shooter/" class="game-card">
+                    <div class="game-icon-banner banner-face">👾</div>
+                    <h4>Face Shooter Arcade</h4>
+                    <p>Retro neon space shooter featuring custom photo upload capabilities, dynamic touch/keyboard controls, particle bursts, and high scores.</p>
+                    <div class="card-footer">
+                        <span>Play Game</span>
+                        <span>❯</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>© 2026 <b>Margarita Gladky</b> • <a href="https://margo.gladky.dev">margo.gladky.dev</a> • Powered by Cloudflare Pages</p>
+        </div>
+    </footer>
+
+</body>
+</html>
